@@ -81,13 +81,12 @@ void loop() // Main thread
 void checkSendSMSWithTemp(char *messageToCheck){
      p=strstr(messageToCheck, SMS_TEMP);
      if(p){
-       
-      char messageToSend[16 + 1];  //buffer used to format a line (+1 is for trailing 0)
-
-      sprintf(messageToSend,"Temperature is: +%d *C",temp);   
-      Serial.print(messageToSend);
-       
-       
+      char messageToSend[120 + 1];  //buffer used to format a line (+1 is for trailing 0)
+      int t = temp;
+      int h = *humidity;
+      sprintf(messageToSend,"Hi, I'm ok!\n Temperature is: +%d*C\nHumidity: %d%%",t, h);   
+      Serial.println("Sending Message:");
+      Serial.println(messageToSend);
 //       char message[ ] = "Temp:";
        sms.SendSMS(number,messageToSend);
      }
