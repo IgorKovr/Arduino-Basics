@@ -12,6 +12,7 @@
 #include "SIM900.h"
 #include <SoftwareSerial.h>
 #include "sms.h"
+#include "call.h"
 
 // setup  DHT server
 #include "DHT.h"
@@ -23,12 +24,15 @@ DHT dht(DHTPIN, DHTTYPE);
 #define SMS_ON   "123"
 #define SMS_OFF  "321"
 #define SMS_TEMP "?"
+#define SMS_BALANCE "111"
+#define CHECK_BALANCE "*110*10*03#"
 
 char sendNumber[]="0932287117";
 float temp;
 float *humidity;
 
 SMSGSM sms;
+CallGSM call;
 char number[30];
 char messageRead[180];
 //char messageSend[40];
@@ -73,6 +77,7 @@ void loop() // Main thread
    sms.GetSMS((int)pos,number,messageRead,180);
    checkSendSMSWithTemp(messageRead);
    checkSwitchLED(messageRead);
+   checkBALANCE(messageRead);
    sms.DeleteSMS((int)pos); // Deleting founded message
  }
  delay(500);
@@ -91,6 +96,26 @@ void checkSendSMSWithTemp(char *messageToCheck){
        sms.SendSMS(number,messageToSend);
      }
 }
+
+void checkBALANCE(char *messageToCheck){
+     p=strstr(messageToCheck, SMS_BALANCE);
+     if(p){
+       if(call.CallStatus()!= CALL_ACTIVE_VOICE){
+         Serial.println("Checking Balance!");
+         call.Call(number);
+       }
+       else {
+        Serial.println("Can't check balance, try later"); 
+        sms.SendSMS(number,"Can't check balance, try later");
+       }
+     }
+      p=strstr(messageToCheck, "MTS");
+     if(p){
+       Serial.println("Balance is:");
+       Serial.print(messageToCheck);
+     }
+}
+
 
 void checkSwitchLED(char *messageToCheck){
      p=strstr(messageToCheck, SMS_ON); //  turn led on
